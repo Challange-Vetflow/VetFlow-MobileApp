@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "vet-flow",
+    "slug": "vet-flow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/vet-flow-cadastro.png",
+    "userInterfaceStyle": "light",
+    "scheme": "vetflow",
+    "splash": {
+      "image": "./assets/vet-flow-cadastro.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/vet-flow-cadastro.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.seuusuario.vetflow"
+    },
+    "web": {
+      "favicon": "./assets/vet-flow-cadastro.png"
+    }
+  }
+}
