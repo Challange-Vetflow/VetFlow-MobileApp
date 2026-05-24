@@ -19,9 +19,13 @@ Utilitários: react-native-mask-text (máscaras de input), @expo/vector-icons (�
 Nomes:
 
 Andrei de Paiva Gibbini RM: 563061 (2TDSPF)
+
 Pedro Sakai Silva Zambaca RM: 565956 (2TDSPF)
+
 Pedro Santos Pequini RM: 561842 (2TDSPF)
+
 Arthur Câmara RM: 562310 (2TDSPG)
+
 Diogo Cunha RM: 563654 (2TDSPF)
 
 ⚙️ Como Rodar o ProjetoPara executar o projeto localmente, siga os passos abaixo:
