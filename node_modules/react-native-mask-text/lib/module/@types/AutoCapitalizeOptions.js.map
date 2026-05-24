@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["AutoCapitalizeOptions.ts"],"sourcesContent":["export type AutoCapitalizeOptions =\n  | 'characters'\n  | 'words'\n  | 'sentences'\n  | 'none'\n"],"mappings":""}

@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["StyleObj.ts"],"sourcesContent":["import type { StyleProp, TextStyle, ViewStyle } from \"react-native\";\n\nexport type StyleObj = StyleProp<ViewStyle | TextStyle>"],"mappings":""}

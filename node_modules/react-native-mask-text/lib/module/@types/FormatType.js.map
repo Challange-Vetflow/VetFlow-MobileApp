@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["FormatType.ts"],"sourcesContent":["export type FormatType = 'custom' | 'currency' | 'date' | 'time'\n"],"mappings":""}

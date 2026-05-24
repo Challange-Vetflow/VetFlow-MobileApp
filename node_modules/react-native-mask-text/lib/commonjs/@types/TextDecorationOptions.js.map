@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["TextDecorationOptions.ts"],"sourcesContent":["export type TextDecorationOptions = \n'none'\n| 'underline'\n| 'line-through'\n| 'underline line-through'\n"],"mappings":""}
