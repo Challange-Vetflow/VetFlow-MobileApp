@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "VetFlow",
+    "slug": "vetflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "vetflow",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4FBF9"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#2A9D8F"
+      },
+      "package": "com.fiap.vetflow"
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  }
+}
