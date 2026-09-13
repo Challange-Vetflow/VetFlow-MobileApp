@@ -182,14 +182,6 @@ Ou crie uma nova conta pela tela **Criar Conta** do próprio app.
 8. **Lembretes** — vacinas atrasadas/a vencer, com filtro
 9. **Perfil** — dados do usuário + logout
 
-## Checklist de requisitos avaliativos (Sprint 3)
-
-- **Navegação (6+ telas, rotas explícitas, React Navigation)** ✅ 9 telas, `native-stack` + `bottom-tabs`, todas as rotas declaradas em `src/routes/`.
-- **Integração real com API HTTP (TanStack Query, sem mock, CRUD completo em 2 entidades)** ✅ `usePets`/`useVaccines`, CRUD completo de Pets e Vacinas, dados 100% vindos da API.
-- **Autenticação real, sessão persistente, rotas protegidas, logout funcional** ✅ Sessão Spring Security via API própria (login/registro/me/logout), restauração automática no boot (`GET /auth/me`), navigator de telas internas só existe quando autenticado.
-- **Arquitetura em camadas (UI / lógica / dados)** ✅ Telas nunca chamam a API diretamente; toda a lógica de rede fica em `services/` + `hooks/`.
-- **Documentação e vídeo** ✅ Este README + instruções de execução; vídeo de apresentação a ser gravado pelo grupo.
-
 ## Fora do escopo desta sprint
 
 A API Java também expõe `Tutor`, `Clinic`, `Appointment` e `Medication`. Para manter o app focado e com CRUD completo e bem testado em duas entidades centrais (Pets + Vacinas), essas demais entidades não foram integradas ao mobile nesta sprint — ficam como evolução natural para a Sprint 4 (ex.: agendamento de consultas com `Appointment`/`Clinic`).
