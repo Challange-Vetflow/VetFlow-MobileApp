@@ -114,7 +114,8 @@ de nomenclatura da API real:
 
 ## Como executar
 
-### 1. Suba a API Java primeiro
+### 1. Faça o download da API Java neste repositório "https://github.com/Challange-Vetflow/vetflow-java", descompacte o arquivo, abra ele em alguma IDE e então no terminal:
+
 ```bash
 cd vetflow-java-final
 mvn spring-boot:run
@@ -130,7 +131,7 @@ export const BASE_URL = 'http://localhost:8080/api';          // Web/simulador i
 // export const BASE_URL = 'http://192.168.0.X:8080/api';      // Dispositivo físico (IP da sua máquina)
 ```
 
-### 3. Instale e rode o app
+### 3. Instale o arquivo deste repositório e rode o app
 ```bash
 npm install
 npx expo start
