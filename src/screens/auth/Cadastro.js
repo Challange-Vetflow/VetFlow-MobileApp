@@ -20,10 +20,19 @@ import { Feather } from '@expo/vector-icons';
 import Header from '../../components/Header';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import { COLORS, FONTS, SPACING } from '../../constants/theme';
+import { FONTS, SPACING } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import useThemedStyles from '../../hooks/useThemedStyles';
 import { useAuth } from '../../contexts/AuthContext';
+import { validarCadastro } from '../../utils/validators';
+import { camposDoErro, mensagemDeErro } from '../../utils/apiError';
+
+// Campos do TutorRegisterRequest da API → campos do formulário
+const mapearCamposCadastro = (c) => ({ nome: c.name, email: c.email, telefone: c.phone, senha: c.password });
 
 export default function Cadastro({ navigation }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { registrar, processando } = useAuth();
 
   const [nome, setNome] = useState('');
@@ -35,15 +44,7 @@ export default function Cadastro({ navigation }) {
   const [erros, setErros] = useState({});
 
   const validar = () => {
-    const e = {};
-    if (!nome.trim()) e.nome = 'Nome completo é obrigatório.';
-    if (!email.trim()) e.email = 'E-mail é obrigatório.';
-    else if (!/\S+@\S+\.\S+/.test(email)) e.email = 'E-mail inválido.';
-    if (!telefone.trim()) e.telefone = 'Telefone é obrigatório.';
-    else if (telefone.replace(/\D/g, '').length < 8) e.telefone = 'Telefone inválido.';
-    if (!senha) e.senha = 'Senha é obrigatória.';
-    else if (senha.length < 6) e.senha = 'Senha deve ter no mínimo 6 caracteres.';
-    if (senha !== confirmarSenha) e.confirmarSenha = 'As senhas não coincidem.';
+    const e = validarCadastro({ nome, email, telefone, senha, confirmarSenha });
     setErros(e);
     return Object.keys(e).length === 0;
   };
@@ -54,14 +55,8 @@ export default function Cadastro({ navigation }) {
       await registrar({ nome: nome.trim(), email: email.trim(), telefone: telefone.trim(), senha });
       // A troca para o app principal acontece sozinha (isAuthenticated muda).
     } catch (error) {
-      const status = error?.response?.status;
-      const apiMsg = error?.response?.data?.erro;
-      const msg =
-        status === 409
-          ? apiMsg || 'Já existe uma conta cadastrada com este e-mail.'
-          : status === 400
-          ? apiMsg || 'Dados inválidos. Confira os campos e tente novamente.'
-          : 'Não foi possível criar sua conta. Verifique a conexão com a API e tente novamente.';
+      setErros((atual) => ({ ...atual, ...mapearCamposCadastro(camposDoErro(error)) }));
+      const msg = mensagemDeErro(error, 'Não foi possível criar sua conta. Verifique a conexão com a API e tente novamente.');
       Alert.alert('Erro no cadastro', msg);
     }
   };
@@ -161,7 +156,7 @@ export default function Cadastro({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   flex: { flex: 1 },
   content: { padding: SPACING.xl, paddingBottom: SPACING.xxl },
