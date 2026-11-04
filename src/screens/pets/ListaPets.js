@@ -10,14 +10,19 @@ import Header from '../../components/Header';
 import PetCard from '../../components/PetCard';
 import EmptyState from '../../components/EmptyState';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import useThemedStyles from '../../hooks/useThemedStyles';
 import { usePets, useDeletePet } from '../../hooks/usePets';
-import { useAuth } from '../../contexts/AuthContext';
+import { usePermissoes } from '../../hooks/usePermissoes';
+import { mensagemDeErro } from '../../utils/apiError';
 
 export default function ListaPets({ navigation }) {
-  const { usuario } = useAuth();
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { isVet, podeCadastrarPet } = usePermissoes();
   const [busca, setBusca] = useState('');
-  const { data: pets = [], isLoading, isFetching, refetch } = usePets(usuario?.tutorId);
+  const { data: pets = [], isLoading, isFetching, refetch } = usePets();
   const deletePet = useDeletePet();
 
   const petsFiltrados = useMemo(
@@ -32,7 +37,7 @@ export default function ListaPets({ navigation }) {
   const handleDeletar = (pet) => {
     Alert.alert(
       'Remover pet',
-      `Deseja remover "${pet.name}" e todo o seu histórico de vacinas?`,
+      `Deseja remover "${pet.name}" e todo o seu histórico de vacinas e consultas?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -40,7 +45,7 @@ export default function ListaPets({ navigation }) {
           style: 'destructive',
           onPress: () => {
             deletePet.mutate(pet.id, {
-              onError: () => Alert.alert('Erro', 'Não foi possível remover o pet.'),
+              onError: (error) => Alert.alert('Erro', mensagemDeErro(error, 'Não foi possível remover o pet.')),
             });
           },
         },
@@ -53,9 +58,9 @@ export default function ListaPets({ navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <Header
-        title="Meus Pets"
-        rightIcon="plus-circle"
-        onRightPress={() => navigation.navigate('PetForm')}
+        title={isVet ? 'Pets' : 'Meus Pets'}
+        rightIcon={podeCadastrarPet ? 'plus-circle' : undefined}
+        onRightPress={podeCadastrarPet ? () => navigation.navigate('PetForm') : undefined}
       />
 
       <View style={styles.searchWrapper}>
@@ -87,7 +92,7 @@ export default function ListaPets({ navigation }) {
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <TouchableOpacity onLongPress={() => handleDeletar(item)} activeOpacity={1}>
-            <PetCard pet={item} onPress={() => navigation.navigate('PetDetalhe', { petId: item.id })} />
+            <PetCard pet={item} showTutor={isVet} onPress={() => navigation.navigate('PetDetalhe', { petId: item.id })} />
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.listContent}
@@ -97,9 +102,9 @@ export default function ListaPets({ navigation }) {
         ListEmptyComponent={
           <EmptyState
             icon="heart"
-            title="Você ainda não cadastrou nenhum pet."
-            actionLabel="Cadastrar primeiro pet"
-            onAction={() => navigation.navigate('PetForm')}
+            title={podeCadastrarPet ? 'Você ainda não cadastrou nenhum pet.' : 'Nenhum pet encontrado.'}
+            actionLabel={podeCadastrarPet ? 'Cadastrar primeiro pet' : undefined}
+            onAction={podeCadastrarPet ? () => navigation.navigate('PetForm') : undefined}
           />
         }
         ListFooterComponent={
@@ -112,7 +117,7 @@ export default function ListaPets({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   searchWrapper: {
     flexDirection: 'row',
