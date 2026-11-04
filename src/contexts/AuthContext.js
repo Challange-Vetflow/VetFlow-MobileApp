@@ -23,6 +23,7 @@ import {
   getUsuarioCache,
 } from '../services/authService';
 import { registrarHandlerSessaoExpirada } from '../services/api';
+import { reminderService } from '../services/reminderService';
 
 const AuthContext = createContext(null);
 
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
       try {
         const response = await authService.me();
         const perfil = mapAuthResponse(response.data);
+        reminderService.definirPerfil(perfil.role);
         setUsuario(perfil);
         await salvarUsuarioCache(perfil);
       } catch (error) {
@@ -48,6 +50,7 @@ export function AuthProvider({ children }) {
           // Falha de rede/timeout: mantém a última sessão conhecida em cache
           // para não derrubar o usuário por instabilidade de conexão.
           const cache = await getUsuarioCache();
+          if (cache) reminderService.definirPerfil(cache.role);
           setUsuario(cache);
         }
       } finally {
@@ -62,6 +65,7 @@ export function AuthProvider({ children }) {
       setUsuario(null);
       limparUsuarioCache();
       queryClient.clear();
+      reminderService.cancelarTudo(); // lembretes são do usuário que saiu
     });
   }, []);
 
@@ -71,6 +75,7 @@ export function AuthProvider({ children }) {
       const response = await authService.login({ email, senha });
       const perfil = mapAuthResponse(response.data);
       await salvarUsuarioCache(perfil);
+      reminderService.definirPerfil(perfil.role);
       setUsuario(perfil);
       return perfil;
     } finally {
@@ -81,9 +86,13 @@ export function AuthProvider({ children }) {
   const registrar = useCallback(async ({ nome, email, telefone, senha }) => {
     setProcessando(true);
     try {
-      const response = await authService.registrar({ nome, email, telefone, senha });
+      await authService.registrar({ nome, email, telefone, senha });
+      // A API cria a conta (Tutor + User) mas NÃO inicia sessão: autentica em seguida
+      // para obter o cookie de sessão e o perfil completo.
+      const response = await authService.login({ email, senha });
       const perfil = mapAuthResponse(response.data);
       await salvarUsuarioCache(perfil);
+      reminderService.definirPerfil(perfil.role);
       setUsuario(perfil);
       return perfil;
     } finally {
@@ -99,6 +108,7 @@ export function AuthProvider({ children }) {
     }
     await limparUsuarioCache();
     queryClient.clear();
+    await reminderService.cancelarTudo(); // não deixar lembretes de um usuário no aparelho após sair
     setUsuario(null);
   }, []);
 

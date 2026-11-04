@@ -19,14 +19,21 @@ import Header from '../../components/Header';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import EmptyState from '../../components/EmptyState';
+import { FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import useThemedStyles from '../../hooks/useThemedStyles';
 import { usePet } from '../../hooks/usePets';
 import { useVaccine, useCreateVaccine, useUpdateVaccine } from '../../hooks/useVaccines';
-
-const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+import { validarVacina } from '../../utils/validators';
+import { camposDoErro, mensagemDeErro } from '../../utils/apiError';
+import { usePermissoes } from '../../hooks/usePermissoes';
 
 export default function VaccineForm({ navigation, route }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { petId, vaccineId } = route.params;
+  const { podeGerenciarVacinas } = usePermissoes();
   const modoEdicao = !!vaccineId;
 
   const { data: pet } = usePet(petId);
@@ -51,15 +58,7 @@ export default function VaccineForm({ navigation, route }) {
   }, [vacinaExistente]);
 
   const validar = () => {
-    const e = {};
-    if (!vaccineName.trim()) e.vaccineName = 'O nome da vacina é obrigatório.';
-    if (!appliedAt.trim()) e.appliedAt = 'A data de aplicação é obrigatória.';
-    else if (!DATA_REGEX.test(appliedAt)) e.appliedAt = 'Use o formato AAAA-MM-DD.';
-    if (!nextDoseAt.trim()) e.nextDoseAt = 'A data da próxima dose é obrigatória.';
-    else if (!DATA_REGEX.test(nextDoseAt)) e.nextDoseAt = 'Use o formato AAAA-MM-DD.';
-    else if (DATA_REGEX.test(appliedAt) && nextDoseAt <= appliedAt) {
-      e.nextDoseAt = 'A próxima dose deve ser posterior à data de aplicação.';
-    }
+    const e = validarVacina({ vaccineName, appliedAt, nextDoseAt });
     setErros(e);
     return Object.keys(e).length === 0;
   };
@@ -76,8 +75,8 @@ export default function VaccineForm({ navigation, route }) {
     };
 
     const onError = (error) => {
-      const apiMsg = error?.response?.data?.message;
-      Alert.alert('Erro', apiMsg || 'Não foi possível salvar a vacina. Verifique os dados e tente novamente.');
+      setErros((atual) => ({ ...atual, ...camposDoErro(error) }));
+      Alert.alert('Erro', mensagemDeErro(error, 'Não foi possível salvar a vacina. Verifique os dados e tente novamente.'));
     };
 
     if (modoEdicao) {
@@ -89,6 +88,21 @@ export default function VaccineForm({ navigation, route }) {
       createVaccine.mutate(dados, { onSuccess: () => navigation.goBack(), onError });
     }
   };
+
+  if (!podeGerenciarVacinas) {
+    // Regra da API: só a clínica (VET) registra/edita vacinas. Tutor apenas consulta.
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Header title="Vacina" onBack={() => navigation.goBack()} />
+        <EmptyState
+          icon="lock"
+          title="As vacinas são registradas pela clínica veterinária. Você pode acompanhar o histórico e os lembretes no detalhe do pet."
+          actionLabel="Voltar"
+          onAction={() => navigation.goBack()}
+        />
+      </SafeAreaView>
+    );
+  }
 
   if (modoEdicao && carregandoVacina) return <LoadingOverlay mensagem="Carregando vacina..." />;
 
@@ -159,7 +173,7 @@ export default function VaccineForm({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   flex: { flex: 1 },
   content: { padding: SPACING.xl, paddingBottom: SPACING.xxl },

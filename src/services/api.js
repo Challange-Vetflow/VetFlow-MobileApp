@@ -71,9 +71,9 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response) {
       console.error('[API Error]', error.response.status, error.response.data);
-      // Ignora 401 do próprio /auth/me — é o fluxo normal de "não logado ainda".
-      const isCheckDeSessao = error.config?.url?.includes('/auth/me');
-      if (error.response.status === 401 && !isCheckDeSessao && onSessaoExpirada) {
+      // 401 em /auth/* (login com senha errada, /me sem sessão) é fluxo normal — não é "sessão expirada".
+      const isAuth = error.config?.url?.includes('/auth/');
+      if (error.response.status === 401 && !isAuth && onSessaoExpirada) {
         onSessaoExpirada();
       }
     } else if (error.request) {
