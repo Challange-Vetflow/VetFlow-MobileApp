@@ -36,22 +36,17 @@ export async function getUsuarioCache() {
 }
 
 /**
- * Normaliza o payload real da API ({ id, nome, email, role, tutorId }) para
- * o formato usado no app. `tutorId` pode chegar como "" (string vazia) para
- * usuários sem tutor vinculado (ex.: role VET) — tratamos isso como null.
+ * Normaliza o payload da API ({ id, nome, email, role, tutorId }) para o formato do app.
+ * Os ids são UUID (texto) — NÃO converter para número. `tutorId` é null para VET.
  */
 export function mapAuthResponse(data) {
   if (!data) return null;
-  const tutorIdBruto = data.tutorId;
-  const tutorId =
-    tutorIdBruto === '' || tutorIdBruto == null ? null : Number(tutorIdBruto);
-
   return {
     userId: data.id,
     nome: data.nome,
     email: data.email,
-    role: data.role,
-    tutorId,
+    role: data.role, // 'TUTOR' | 'VET'
+    tutorId: data.tutorId || null,
   };
 }
 

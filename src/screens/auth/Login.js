@@ -19,10 +19,16 @@ import { Feather } from '@expo/vector-icons';
 
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import useThemedStyles from '../../hooks/useThemedStyles';
 import { useAuth } from '../../contexts/AuthContext';
+import { validarLogin } from '../../utils/validators';
+import { mensagemDeErro } from '../../utils/apiError';
 
 export default function Login({ navigation }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { login, processando } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -31,13 +37,9 @@ export default function Login({ navigation }) {
   const [erros, setErros] = useState({});
 
   const validar = () => {
-    const novosErros = {};
-    if (!email.trim()) novosErros.email = 'E-mail é obrigatório.';
-    else if (!/\S+@\S+\.\S+/.test(email)) novosErros.email = 'E-mail inválido.';
-    if (!senha) novosErros.senha = 'Senha é obrigatória.';
-    else if (senha.length < 6) novosErros.senha = 'Senha deve ter no mínimo 6 caracteres.';
-    setErros(novosErros);
-    return Object.keys(novosErros).length === 0;
+    const e = validarLogin({ email, senha });
+    setErros(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
@@ -51,7 +53,7 @@ export default function Login({ navigation }) {
       const msg =
         status === 401 || status === 403
           ? 'E-mail ou senha incorretos.'
-          : 'Não foi possível conectar à API. Verifique sua conexão e tente novamente.';
+          : mensagemDeErro(error, 'Não foi possível entrar. Tente novamente.');
       Alert.alert('Erro ao entrar', msg, [{ text: 'OK' }]);
     }
   };
@@ -139,7 +141,7 @@ export default function Login({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   flex: { flex: 1 },
   container: {

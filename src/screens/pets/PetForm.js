@@ -2,7 +2,7 @@
 // Tela 6: Form de Pet — Create e Update do CRUD de Pets.
 // Modo "criar" quando a rota não recebe petId; modo "editar" quando recebe.
 // Campos alinhados 1:1 com PetRequest da API (name, species, breed,
-// birthDate, weightKg, tutorId — este último injetado automaticamente a
+// birthDate, weightKg (obrigatório), tutorId — este último injetado automaticamente a
 // partir do usuário logado, nunca digitado pelo tutor).
 
 import React, { useEffect, useState } from 'react';
@@ -23,9 +23,13 @@ import Header from '../../components/Header';
 import CustomInput from '../../components/CustomInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import LoadingOverlay from '../../components/LoadingOverlay';
-import { COLORS, FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import useThemedStyles from '../../hooks/useThemedStyles';
 import { usePet, useCreatePet, useUpdatePet } from '../../hooks/usePets';
 import { useAuth } from '../../contexts/AuthContext';
+import { validarPet } from '../../utils/validators';
+import { camposDoErro, mensagemDeErro } from '../../utils/apiError';
 
 const ESPECIES = [
   { value: 'DOG', label: 'Cachorro', icon: 'github' },
@@ -35,9 +39,9 @@ const ESPECIES = [
   { value: 'OTHER', label: 'Outro', icon: 'star' },
 ];
 
-const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
 export default function PetForm({ navigation, route }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const petId = route.params?.petId;
   const modoEdicao = !!petId;
   const { usuario } = useAuth();
@@ -65,23 +69,16 @@ export default function PetForm({ navigation, route }) {
   }, [petExistente]);
 
   const validar = () => {
-    const e = {};
-    if (!name.trim()) e.name = 'O nome do pet é obrigatório.';
-    if (!birthDate.trim()) e.birthDate = 'A data de nascimento é obrigatória.';
-    else if (!DATA_REGEX.test(birthDate)) e.birthDate = 'Use o formato AAAA-MM-DD.';
-    if (weightKg && Number.isNaN(Number(weightKg.replace(',', '.')))) {
-      e.weightKg = 'Peso inválido.';
-    } else if (weightKg && Number(weightKg.replace(',', '.')) <= 0) {
-      e.weightKg = 'Peso deve ser maior que zero.';
-    }
+    const e = validarPet({ name, birthDate, weightKg });
     setErros(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSalvar = () => {
     if (!validar()) return;
-    if (!usuario?.tutorId) {
-      Alert.alert('Sessão inválida', 'Não foi possível identificar o tutor logado. Faça login novamente.');
+    const tutorId = usuario?.tutorId || petExistente?.tutorId;
+    if (!tutorId) {
+      Alert.alert('Cadastro indisponível', 'Somente tutores cadastram novos pets pelo app. Faça login com uma conta de tutor.');
       return;
     }
 
@@ -90,13 +87,13 @@ export default function PetForm({ navigation, route }) {
       species,
       breed: breed.trim() || null,
       birthDate,
-      weightKg: weightKg ? Number(weightKg.replace(',', '.')) : null,
-      tutorId: usuario.tutorId,
+      weightKg: Number(weightKg.replace(',', '.')),
+      tutorId, // TUTOR: a API usa o tutor logado e ignora este campo
     };
 
     const onError = (error) => {
-      const apiMsg = error?.response?.data?.message;
-      Alert.alert('Erro', apiMsg || 'Não foi possível salvar o pet. Verifique os dados e tente novamente.');
+      setErros((atual) => ({ ...atual, ...camposDoErro(error) })); // erros de validação do servidor, por campo
+      Alert.alert('Erro', mensagemDeErro(error, 'Não foi possível salvar o pet. Verifique os dados e tente novamente.'));
     };
 
     if (modoEdicao) {
@@ -140,7 +137,7 @@ export default function PetForm({ navigation, route }) {
                   style={[styles.especieChip, ativo && styles.especieChipAtivo]}
                   onPress={() => setSpecies(opcao.value)}
                 >
-                  <Feather name={opcao.icon} size={14} color={ativo ? COLORS.white : COLORS.textSecondary} />
+                  <Feather name={opcao.icon} size={14} color={ativo ? COLORS.onPrimary : COLORS.textSecondary} />
                   <Text style={[styles.especieChipText, ativo && styles.especieChipTextAtivo]}>
                     {opcao.label}
                   </Text>
@@ -168,7 +165,7 @@ export default function PetForm({ navigation, route }) {
           />
 
           <CustomInput
-            label="Peso (kg)"
+            label="Peso (kg) *"
             icon="activity"
             placeholder="Ex.: 8.5"
             value={weightKg}
@@ -180,7 +177,7 @@ export default function PetForm({ navigation, route }) {
           <View style={styles.tutorInfo}>
             <Feather name="user" size={14} color={COLORS.textMuted} />
             <Text style={styles.tutorInfoText}>
-              Tutor responsável: <Text style={{ fontWeight: '700' }}>{usuario?.nome}</Text>
+              Tutor responsável: <Text style={{ fontWeight: '700' }}>{petExistente?.tutorName || usuario?.nome}</Text>
             </Text>
           </View>
 
@@ -197,7 +194,7 @@ export default function PetForm({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   flex: { flex: 1 },
   content: { padding: SPACING.xl, paddingBottom: SPACING.xxl },
@@ -234,7 +231,7 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.sm,
     fontWeight: '700',
   },
-  especieChipTextAtivo: { color: COLORS.white },
+  especieChipTextAtivo: { color: COLORS.onPrimary },
   tutorInfo: {
     flexDirection: 'row',
     alignItems: 'center',

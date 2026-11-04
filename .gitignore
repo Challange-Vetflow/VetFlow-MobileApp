@@ -16,3 +16,7 @@ web-build/
 
 # macOS
 .DS_Store
+
+# projetos nativos gerados por "expo prebuild"
+/android
+/ios
