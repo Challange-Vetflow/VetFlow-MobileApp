@@ -4,9 +4,13 @@
 
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../constants/theme';
+import { FONTS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 export default function LoadingOverlay({ mensagem = 'Carregando...' }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={COLORS.primary} />
@@ -15,7 +19,7 @@ export default function LoadingOverlay({ mensagem = 'Carregando...' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

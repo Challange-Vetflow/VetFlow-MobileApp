@@ -6,7 +6,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
+import { formatarIdade } from '../utils/dateUtils';
 
 // NOTA: o pacote Feather não possui ícones literais de "cachorro/gato/pássaro";
 // usamos ícones aproximados do conjunto disponível. Podem ser trocados por
@@ -19,16 +22,9 @@ const ESPECIE_CONFIG = {
   OTHER: { icon: 'star', label: 'Outro' },
 };
 
-export function formatarIdade(ageInMonths) {
-  if (ageInMonths == null) return null;
-  if (ageInMonths < 12) return `${ageInMonths} ${ageInMonths === 1 ? 'mês' : 'meses'}`;
-  const anos = Math.floor(ageInMonths / 12);
-  const mesesRestantes = ageInMonths % 12;
-  const base = `${anos} ${anos === 1 ? 'ano' : 'anos'}`;
-  return mesesRestantes > 0 ? `${base} e ${mesesRestantes}m` : base;
-}
-
-export default function PetCard({ pet, onPress }) {
+export default function PetCard({ pet, onPress, showTutor = false }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const config = ESPECIE_CONFIG[pet.species] || ESPECIE_CONFIG.OTHER;
   const idade = formatarIdade(pet.ageInMonths);
 
@@ -43,6 +39,9 @@ export default function PetCard({ pet, onPress }) {
         <Text style={styles.detalhe} numberOfLines={1}>
           {config.label}{pet.breed ? ` · ${pet.breed}` : ''}
         </Text>
+        {showTutor && !!pet.tutorName && (
+          <Text style={styles.detalhe} numberOfLines={1}>Tutor: {pet.tutorName}</Text>
+        )}
         <View style={styles.metaRow}>
           {idade && (
             <View style={styles.metaItem}>
@@ -64,7 +63,7 @@ export default function PetCard({ pet, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -4,13 +4,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
-export default function StatCard({ icon, label, value, color = COLORS.primary }) {
+export default function StatCard({ icon, label, value, color }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const tint = color || COLORS.primary;
   return (
     <View style={styles.card}>
-      <View style={[styles.iconWrapper, { backgroundColor: color + '22' }]}>
-        <Feather name={icon} size={20} color={color} />
+      <View style={[styles.iconWrapper, { backgroundColor: tint + '22' }]}>
+        <Feather name={icon} size={20} color={tint} />
       </View>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
@@ -18,7 +23,7 @@ export default function StatCard({ icon, label, value, color = COLORS.primary })
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: COLORS.surface,

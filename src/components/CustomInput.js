@@ -4,9 +4,13 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 export default function CustomInput({ label, icon, error, style, ...props }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={[styles.wrapper, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -25,7 +29,7 @@ export default function CustomInput({ label, icon, error, style, ...props }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   wrapper: {
     width: '100%',
     marginBottom: SPACING.lg,

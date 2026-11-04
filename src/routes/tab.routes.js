@@ -10,11 +10,15 @@ import Home from '../screens/Home';
 import ListaPets from '../screens/pets/ListaPets';
 import Lembretes from '../screens/Lembretes';
 import Perfil from '../screens/Perfil';
-import { COLORS, FONTS } from '../constants/theme';
+import { FONTS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabRoutes() {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -47,7 +51,7 @@ export default function TabRoutes() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   tabBar: {
     backgroundColor: COLORS.surface,
     borderTopColor: COLORS.border,

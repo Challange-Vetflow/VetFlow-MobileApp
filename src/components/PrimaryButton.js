@@ -4,7 +4,9 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, RADIUS } from '../constants/theme';
+import { FONTS, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 export default function PrimaryButton({
   label,
@@ -15,6 +17,8 @@ export default function PrimaryButton({
   variant = 'primary', // 'primary' | 'secondary' | 'outline' | 'danger'
   style,
 }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const isDisabled = disabled || loading;
 
   return (
@@ -25,14 +29,14 @@ export default function PrimaryButton({
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? COLORS.primary : COLORS.white} />
+        <ActivityIndicator color={variant === 'outline' ? COLORS.primary : COLORS.onPrimary} />
       ) : (
         <>
           {icon && (
             <Feather
               name={icon}
               size={18}
-              color={variant === 'outline' ? COLORS.primary : COLORS.white}
+              color={variant === 'outline' ? COLORS.primary : COLORS.onPrimary}
             />
           )}
           <Text style={[styles.label, variant === 'outline' && styles.labelOutline]}>
@@ -44,7 +48,7 @@ export default function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   base: {
     height: 52,
     borderRadius: RADIUS.md,
@@ -63,7 +67,7 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.6 },
   label: {
-    color: COLORS.white,
+    color: COLORS.onPrimary,
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
     letterSpacing: 0.3,
