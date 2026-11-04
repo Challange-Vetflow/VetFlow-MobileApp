@@ -4,19 +4,46 @@
 // limpa o contexto local; a troca de tela é automática (ver routes/index.js).
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Switch, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
 import Header from '../components/Header';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotificacoesPreferencia } from '../hooks/useNotificacoesPreferencia';
+import { BUILD_INFO } from '../config/buildInfo';
+
+const OPCOES_TEMA = [
+  { value: 'system', label: 'Sistema', icon: 'smartphone' },
+  { value: 'light', label: 'Claro', icon: 'sun' },
+  { value: 'dark', label: 'Escuro', icon: 'moon' },
+];
 
 const ROLE_LABEL = { TUTOR: 'Tutor', VET: 'Veterinário(a)' };
 
-export default function Perfil() {
+export default function Perfil({ navigation }) {
+  const { colors: COLORS, preference, setPreference } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { usuario, logout } = useAuth();
   const [saindo, setSaindo] = React.useState(false);
+  const { ativo: notificacoesAtivas, alternar: alternarNotificacoes } = useNotificacoesPreferencia();
+
+  const handleAlternarNotificacoes = async (valor) => {
+    const resultado = await alternarNotificacoes(valor);
+    if (!resultado.ok && resultado.motivo === 'permissao') {
+      Alert.alert(
+        'Permissão necessária',
+        'As notificações estão bloqueadas para o VetFlow. Ative nas configurações do aparelho para receber lembretes de vacinas e consultas.',
+        [
+          { text: 'Agora não', style: 'cancel' },
+          { text: 'Abrir configurações', onPress: () => Linking.openSettings() },
+        ],
+      );
+    }
+  };
 
   const iniciais = (usuario?.nome || '?')
     .trim()
@@ -75,10 +102,61 @@ export default function Perfil() {
               <Feather name="hash" size={16} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.infoLabel}>Id do tutor</Text>
-              <Text style={styles.infoValue}>#{usuario?.tutorId}</Text>
+              <Text style={styles.infoLabel}>Identificação</Text>
+              <Text style={styles.infoValue}>{usuario?.tutorId ? `#${usuario.tutorId.slice(0, 8)}…` : '—'}</Text>
             </View>
           </View>
+        </View>
+
+        {/* Preferências: aparência (tema claro/escuro) e notificações */}
+        <View style={styles.infoCard}>
+          <Text style={styles.prefTitulo}>Aparência</Text>
+          <View style={styles.segmentRow}>
+            {OPCOES_TEMA.map((opcao) => {
+              const ativo = preference === opcao.value;
+              return (
+                <TouchableOpacity
+                  key={opcao.value}
+                  style={[styles.segment, ativo && styles.segmentAtivo]}
+                  onPress={() => setPreference(opcao.value)}
+                >
+                  <Feather name={opcao.icon} size={15} color={ativo ? COLORS.onPrimary : COLORS.textSecondary} />
+                  <Text style={[styles.segmentText, ativo && styles.segmentTextAtivo]}>{opcao.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconWrapper}>
+              <Feather name="bell" size={16} color={COLORS.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.infoValue}>Notificações de lembrete</Text>
+              <Text style={styles.infoLabel}>Vacinas e consultas dos seus pets</Text>
+            </View>
+            <Switch
+              value={notificacoesAtivas}
+              onValueChange={handleAlternarNotificacoes}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
+              thumbColor={COLORS.white}
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity style={styles.infoRow} onPress={() => navigation.navigate('SobreApp')}>
+            <View style={styles.infoIconWrapper}>
+              <Feather name="info" size={16} color={COLORS.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.infoValue}>Sobre o app</Text>
+              <Text style={styles.infoLabel}>Versão {BUILD_INFO.versao} · commit {BUILD_INFO.commitCurto}</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.aboutCard}>
@@ -98,7 +176,7 @@ export default function Perfil() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.lg, paddingBottom: SPACING.xxl },
   avatarSection: { alignItems: 'center', marginBottom: SPACING.xl, marginTop: SPACING.md },
@@ -111,7 +189,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
-  avatarText: { color: COLORS.white, fontSize: FONTS.sizes.xxl, fontWeight: '800' },
+  avatarText: { color: COLORS.onPrimary, fontSize: FONTS.sizes.xxl, fontWeight: '800' },
   nome: { color: COLORS.textPrimary, fontSize: FONTS.sizes.xl, fontWeight: '800' },
   roleBadge: {
     flexDirection: 'row',
@@ -162,4 +240,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.critical,
   },
   logoutText: { color: COLORS.critical, fontSize: FONTS.sizes.md, fontWeight: '700' },
+  prefTitulo: { color: COLORS.textMuted, fontSize: FONTS.sizes.xs, fontWeight: '700', marginBottom: SPACING.sm, textTransform: 'uppercase', letterSpacing: 0.5 },
+  segmentRow: { flexDirection: 'row', gap: SPACING.sm },
+  segment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 40,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+  },
+  segmentAtivo: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  segmentText: { color: COLORS.textSecondary, fontSize: FONTS.sizes.sm, fontWeight: '700' },
+  segmentTextAtivo: { color: COLORS.onPrimary },
 });
