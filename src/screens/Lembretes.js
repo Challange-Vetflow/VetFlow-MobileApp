@@ -1,65 +1,48 @@
 // src/screens/Lembretes.js
-// Tela 9: Lembretes — todas as vacinas atrasadas ou próximas do vencimento,
-// entre os pets do tutor logado.
-//
-// Combina dois hooks que consomem endpoints prontos da API
-// (/api/vaccines/expired e /api/vaccines/due-soon) com a lista de pets do
-// tutor (usePets), já que aqueles endpoints retornam dados de TODOS os pets
-// do sistema — o cruzamento com os pets do tutor é feito aqui no cliente.
+// Tela Lembretes — vacinas atrasadas/a vencer e consultas pendentes dos pets
+// do tutor logado, com filtro. Dados via useLembretes (sem lógica na tela).
 
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Header from '../components/Header';
-import VaccineCard, { statusVacina } from '../components/VaccineCard';
+import VaccineCard from '../components/VaccineCard';
+import AppointmentCard from '../components/AppointmentCard';
 import EmptyState from '../components/EmptyState';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
-import { useAuth } from '../contexts/AuthContext';
-import { usePets } from '../hooks/usePets';
-import { useVaccinesVencidas, useVaccinesAVencer } from '../hooks/useVaccines';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
+import { useLembretes } from '../hooks/useLembretes';
+import { usePermissoes } from '../hooks/usePermissoes';
 
 const FILTROS = [
-  { key: 'TODAS', label: 'Todas' },
+  { key: 'TODAS', label: 'Todos' },
   { key: 'ATRASADAS', label: 'Atrasadas' },
-  { key: 'PROXIMAS', label: 'Próximas' },
+  { key: 'PROXIMAS', label: 'Próximos' },
 ];
 
 export default function Lembretes({ navigation }) {
-  const { usuario } = useAuth();
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { podeGerenciarVacinas } = usePermissoes();
   const [filtro, setFiltro] = useState('TODAS');
+  const { todos, carregando, atualizando, refetch } = useLembretes();
 
-  const petsQuery = usePets(usuario?.tutorId);
-  const vencidasQuery = useVaccinesVencidas();
-  const aVencerQuery = useVaccinesAVencer(30);
+  const filtrados = useMemo(() => {
+    if (filtro === 'ATRASADAS') return todos.filter((i) => i.status?.tone === 'critical');
+    if (filtro === 'PROXIMAS') return todos.filter((i) => i.status?.tone !== 'critical');
+    return todos;
+  }, [todos, filtro]);
 
-  const petsPorId = useMemo(
-    () => new Map((petsQuery.data || []).map((p) => [p.id, p])),
-    [petsQuery.data],
-  );
-
-  const lembretes = useMemo(() => {
-    const todas = [...(vencidasQuery.data || []), ...(aVencerQuery.data || [])];
-    const vistos = new Set();
-    return todas
-      .filter((v) => petsPorId.has(v.petId) && !vistos.has(v.id) && vistos.add(v.id))
-      .map((v) => ({ ...v, petName: petsPorId.get(v.petId)?.name, _status: statusVacina(v) }))
-      .sort((a, b) => new Date(a.nextDoseAt) - new Date(b.nextDoseAt));
-  }, [vencidasQuery.data, aVencerQuery.data, petsPorId]);
-
-  const lembretesFiltrados = useMemo(() => {
-    if (filtro === 'ATRASADAS') return lembretes.filter((v) => v._status?.label === 'Atrasada');
-    if (filtro === 'PROXIMAS') return lembretes.filter((v) => v._status?.label !== 'Atrasada');
-    return lembretes;
-  }, [lembretes, filtro]);
-
-  const carregando = petsQuery.isLoading || vencidasQuery.isLoading || aVencerQuery.isLoading;
-  const atualizando = petsQuery.isFetching || vencidasQuery.isFetching || aVencerQuery.isFetching;
-
-  const onRefresh = () => {
-    petsQuery.refetch();
-    vencidasQuery.refetch();
-    aVencerQuery.refetch();
+  const abrirItem = (item) => {
+    if (item.kind === 'vacina') {
+      // Tutor só consulta vacinas (registro é da clínica): leva ao detalhe do pet.
+      if (podeGerenciarVacinas) navigation.navigate('VaccineForm', { petId: item.petId, vaccineId: item.id });
+      else navigation.navigate('PetDetalhe', { petId: item.petId });
+    } else {
+      navigation.navigate('AppointmentForm', { petId: item.petId, appointmentId: item.id });
+    }
   };
 
   return (
@@ -82,19 +65,19 @@ export default function Lembretes({ navigation }) {
       </View>
 
       <FlatList
-        data={carregando ? [] : lembretesFiltrados}
-        keyExtractor={(item) => String(item.id)}
+        data={carregando ? [] : filtrados}
+        keyExtractor={(item) => item.key}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={atualizando && !carregando} onRefresh={onRefresh} tintColor={COLORS.primary} />
+          <RefreshControl refreshing={atualizando && !carregando} onRefresh={refetch} tintColor={COLORS.primary} />
         }
-        renderItem={({ item }) => (
-          <VaccineCard
-            vacina={item}
-            showPetName
-            onPress={() => navigation.navigate('VaccineForm', { petId: item.petId, vaccineId: item.id })}
-          />
-        )}
+        renderItem={({ item }) =>
+          item.kind === 'vacina' ? (
+            <VaccineCard vacina={item} showPetName onPress={() => abrirItem(item)} />
+          ) : (
+            <AppointmentCard consulta={item} clinicName={item.clinicName} showPetName onPress={() => abrirItem(item)} />
+          )
+        }
         ListEmptyComponent={
           carregando ? (
             <Text style={styles.loadingText}>Carregando lembretes...</Text>
@@ -107,7 +90,7 @@ export default function Lembretes({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   filtrosRow: {
     flexDirection: 'row',
@@ -128,7 +111,7 @@ const styles = StyleSheet.create({
   },
   filtroChipAtivo: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   filtroText: { color: COLORS.textSecondary, fontSize: FONTS.sizes.sm, fontWeight: '600' },
-  filtroTextAtivo: { color: COLORS.white },
+  filtroTextAtivo: { color: COLORS.onPrimary },
   listContent: { padding: SPACING.lg, flexGrow: 1 },
   loadingText: { color: COLORS.textMuted, fontSize: FONTS.sizes.sm, textAlign: 'center', marginTop: 40 },
 });
