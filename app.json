@@ -2,28 +2,53 @@
   "expo": {
     "name": "VetFlow",
     "slug": "vetflow",
-    "version": "1.0.0",
+    "version": "4.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "vetflow",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F4FBF9"
+      "backgroundColor": "#F4FBF9",
+      "dark": {
+        "image": "./assets/splash-dark.png",
+        "backgroundColor": "#0E1816"
+      }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fiap.vetflow",
+      "buildNumber": "4"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#2A9D8F"
+        "backgroundColor": "#FFFFFF"
       },
-      "package": "com.fiap.vetflow"
+      "package": "com.fiap.vetflow",
+      "versionCode": 4
     },
     "web": {
       "favicon": "./assets/icon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#2A9D8F"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {}
   }
 }
