@@ -1,10 +1,12 @@
 # 🐾 VetFlow — MobileApp
 
-Aplicativo mobile (React Native + Expo) para **acompanhamento de saúde de pets**: cadastro de pets, histórico de **vacinas**, **consultas** agendadas e **lembretes por notificação** para o tutor. Desenvolvido para o Challenge FIAP 2026 (Clyvo Vet) — disciplina **Mobile Application Development**, integrado de ponta a ponta com a **API VetFlow em Java (Spring Boot)** do grupo.
+Aplicativo mobile em React Native com Expo para acompanhar a saúde de pets. O tutor cadastra seus animais, acompanha o histórico de vacinas, agenda consultas e recebe lembretes no celular. A clínica registra as vacinas e conclui as consultas.
 
-Este repositório contém as entregas das **Sprints 3 e 4** de Mobile. A Sprint 4 consolida o app: todas as telas funcionais, **tema claro/escuro**, **notificações locais reais**, tela **Sobre o App** com o hash do commit e publicação via **Firebase App Distribution**.
+Projeto do Challenge FIAP 2026 (Clyvo Vet), disciplina Mobile Application Development. O app consome a API VetFlow, desenvolvida pelo grupo em Java com Spring Boot.
 
-## 👥 Integrantes da Equipe
+Este repositório reúne as entregas das Sprints 3 e 4 de Mobile.
+
+## 👥 Integrantes
 
 | Nome | RM | Turma |
 |---|---|---|
@@ -14,151 +16,139 @@ Este repositório contém as entregas das **Sprints 3 e 4** de Mobile. A Sprint 
 | Arthur Câmara | 562310 | 2TDSPG |
 | Diogo Cunha | 563654 | 2TDSPF |
 
-## 🎯 Problema e Solução
+## 🎥 Vídeos
 
-Muitas clínicas veterinárias e tutores sofrem com a desorganização no agendamento de consultas e na gestão do histórico médico dos animais — vacinas esquecidas, consultas perdidas e prontuários espalhados. O VetFlow centraliza essas informações: o tutor cadastra seus pets, registra vacinas e consultas e **recebe lembretes automáticos** antes de cada compromisso, com o histórico sempre à mão.
-
-## 🎥 Vídeos de Apresentação
-
-- **Sprint 4 (final):** _[COLE AQUI O LINK DO YOUTUBE]_
+- Sprint 4: https://youtu.be/ViIrOPn66bU
+  
 - Sprint 3: https://youtu.be/2-OrjDLP7Ag
 
-## Índice
+## 🎯 Problema e solução
 
-- [Funcionalidades](#funcionalidades)
-- [Stack utilizada](#stack-utilizada)
-- [Arquitetura do projeto](#arquitetura-do-projeto)
-- [Tema claro/escuro](#tema-claroescuro)
-- [Notificações](#notificações)
-- [Tela "Sobre o App" e hash do commit](#tela-sobre-o-app-e-hash-do-commit)
-- [Publicação no Firebase App Distribution](#publicação-no-firebase-app-distribution)
-- [Como executar (desenvolvimento)](#como-executar-desenvolvimento)
-- [Contas de teste](#contas-de-teste)
-- [Endpoints da API consumidos](#endpoints-da-api-consumidos)
-- [Telas do aplicativo](#telas-do-aplicativo)
-- [Checklist de requisitos (Sprint 4)](#checklist-de-requisitos-sprint-4)
+Tutores esquecem a data das vacinas, perdem consultas e não têm o histórico do animal em um só lugar. Do lado da clínica, os registros ficam espalhados e o contato com o tutor depende de ligações e mensagens.
 
-## Funcionalidades
+O VetFlow reúne essas informações em um app. O tutor cadastra seus pets, acompanha vacinas e consultas e recebe lembretes antes de cada compromisso, com o histórico sempre à mão.
 
-- **Autenticação real** (API Java, sessão Spring Security): login, cadastro, persistência de sessão, rotas protegidas e logout.
-- **Dois perfis**, com as mesmas regras da API: **Tutor** (gerencia os próprios pets e consultas, acompanha vacinas e recebe lembretes) e **Veterinário/clínica** (vê todos os pets, registra vacinas e conclui consultas).
-- **Pets** — CRUD completo (listar com busca, detalhar, criar, editar, remover).
-- **Vacinas** — CRUD completo vinculado ao pet (registro pelo perfil Veterinário; o tutor acompanha), com status (em dia / esta semana / atrasada).
-- **Consultas** — agendar, editar e cancelar (tutor) e **concluir** (veterinário), vinculadas ao pet e a uma clínica parceira.
-- **Início e Lembretes** — painel com pets, vacinas atrasadas e consultas; lista unificada de lembretes com filtro.
-- **Notificações locais** de vacinas e consultas (ver [Notificações](#notificações)).
-- **Tema claro/escuro** (Perfil > Aparência).
-- **Sobre o App** com versão e hash do commit.
-- Estados de carregamento (`isLoading`/`isFetching`), *pull-to-refresh* e atualização automática da interface após cada operação (invalidação de cache do TanStack Query).
+## ✨ Funcionalidades
 
-## Stack utilizada
+- Login e cadastro de tutor, com a sessão mantida ao reabrir o app e logout
+- Pets: listagem com busca, detalhe, cadastro, edição e remoção
+- Vacinas: histórico por pet com status (em dia, vence esta semana, atrasada); o registro e a edição são feitos pelo veterinário
+- Consultas: agendamento, edição e cancelamento pelo tutor e conclusão pelo veterinário, sempre ligadas a um pet e a uma clínica parceira
+- Início: resumo com os pets, as vacinas atrasadas e as próximas consultas
+- Lembretes: lista única de vacinas e consultas, com filtro
+- Notificações de lembrete para vacinas e consultas
+- Tema claro e escuro
+- Tela Sobre o App com a versão e o hash do commit
+- Pull-to-refresh e atualização automática das listas depois de cada alteração
+
+### Perfis de acesso
+
+O app segue as mesmas regras de permissão da API.
+
+| Perfil | O que pode fazer |
+|---|---|
+| Tutor | Gerencia os próprios pets e consultas, acompanha as vacinas e recebe os lembretes |
+| Veterinário | Vê todos os pets, registra e edita vacinas e conclui consultas |
+
+## 🛠️ Tecnologias
 
 | Camada | Tecnologia |
 |---|---|
 | Framework | React Native + Expo (SDK 54) |
-| Navegação | React Navigation (native-stack + bottom-tabs) |
-| Dados remotos | TanStack Query (`useQuery` / `useMutation`) + Axios |
-| Autenticação | Sessão Spring Security (cookie `JSESSIONID`) via API Java |
-| Notificações | `expo-notifications` (notificações locais agendadas e imediatas) |
-| Persistência local | AsyncStorage (cache do perfil, tema, preferências) |
-| Build/publicação | EAS Build (APK) / Gradle + Firebase App Distribution |
+| Navegação | React Navigation (native-stack e bottom-tabs) |
+| Dados remotos | TanStack Query + Axios |
+| Autenticação | Sessão da API (cookie `JSESSIONID`) |
+| Notificações | expo-notifications |
+| Armazenamento local | AsyncStorage (perfil em cache, tema e preferências) |
+| Build e distribuição | EAS Build + Firebase App Distribution |
 
-## Arquitetura do projeto
+## 📁 Estrutura do projeto
 
 ```
 src/
-├── config/        env.js (URL da API por variável de ambiente), buildInfo.js (versão/commit)
-├── constants/     theme.js (paletas clara/escura), appointmentTypes.js
-├── contexts/      AuthContext.js (sessão), ThemeContext.js (tema)
-├── services/      Acesso a dados e regras de lembretes
-│   ├── api.js, authService.js, petsService.js, vaccinesService.js,
-│   │   appointmentsService.js, clinicsService.js, queryClient.js
-│   ├── reminderPlanner.js   → REGRAS (quando/o que notificar) — funções puras
-│   ├── notificationService.js → wrapper do expo-notifications
-│   └── reminderService.js   → orquestra regras + execução
-├── hooks/         TanStack Query isolado da UI: usePets, useVaccines, useAppointments,
-│                  useClinics, useLembretes, useNotificacoes, useNotificacoesPreferencia,
-│                  useThemedStyles
-├── utils/         dateUtils, statusUtils, validators, lembretes, notificationNavigation
-├── components/    Header, CustomInput, PrimaryButton, cards (Pet, Vaccine, Appointment, Stat)...
-├── routes/        index (proteção de rotas), auth/app/tab routes, navigationRef
-└── screens/       auth/, pets/, vaccines/, appointments/, Home, Lembretes, Perfil, SobreApp
+├── components/   componentes reutilizáveis (Header, inputs, botões e cards)
+├── config/       URL da API e informações da versão
+├── constants/    cores dos temas e tipos de consulta
+├── contexts/     autenticação (AuthContext) e tema (ThemeContext)
+├── hooks/        hooks de dados (usePets, useVaccines, useAppointments...) e de notificações
+├── routes/       navegação: login, abas e telas internas
+├── screens/      telas do app (auth, pets, vaccines, appointments, Home, Lembretes, Perfil, SobreApp)
+├── services/     chamadas à API e agendamento das notificações
+└── utils/        datas, validações e status
 ```
 
-**Separação de responsabilidades:** as telas só compõem interface. Nenhuma tela chama `axios`/`fetch` nem contém regra de negócio — dados passam por **hooks** (TanStack Query) → **services** (HTTP); validações, datas e status ficam em **utils**; regras de notificação ficam em **reminderPlanner**.
+As telas cuidam apenas da interface. Os dados chegam por hooks do TanStack Query, que usam os services para falar com a API. Validações, datas e status ficam em `utils`, e as regras dos lembretes ficam em `services/reminderPlanner.js`.
 
-## Tema claro/escuro
+## 🌗 Tema claro e escuro
 
-Paletas `LIGHT_COLORS`/`DARK_COLORS` em `src/constants/theme.js`, fornecidas por `ThemeContext`. Em **Perfil > Aparência** o usuário escolhe *Sistema* (acompanha o celular), *Claro* ou *Escuro*; a escolha é persistida em AsyncStorage. Todos os componentes usam `useTheme()`/`useThemedStyles()`, e o React Navigation, a barra de status e o splash (`splash.dark`) também acompanham o tema.
+As cores dos dois temas estão em `src/constants/theme.js`. Em Perfil > Aparência dá para escolher entre seguir o sistema, claro ou escuro, e a escolha fica salva no aparelho. A navegação, a barra de status e a tela de abertura também acompanham o tema.
 
-## Notificações
+## 🔔 Notificações
 
-Notificações **locais** (`expo-notifications`), disparadas por eventos reais do app e da API:
+As notificações são locais, agendadas no próprio aparelho com o expo-notifications. Os lembretes são do tutor; no aparelho do veterinário eles não são agendados.
 
-Os lembretes são do **tutor** (dono do pet) — no aparelho do veterinário não são agendados.
-
-| Evento | Notificação (no app do tutor) |
+| Quando | O que acontece |
 |---|---|
-| Tutor **agenda/edita uma consulta** | Imediata: "✅ Consulta agendada"; agendadas: 24 h e 1 h antes |
-| **Ao abrir o app** (dados da API) | Resumo do dia: "⚠️ N vacinas atrasadas" / "🗓️ Lembretes da semana" (uma vez por dia por conteúdo) e agendamento dos lembretes das próximas doses (véspera e dia, às 09:00) e consultas |
-| Clínica **registra uma vacina** (app do veterinário ou web) | Na próxima abertura/atualização do app do tutor, os lembretes da nova dose são agendados |
-| Consulta cancelada/concluída, pet removido, logout | Lembretes agendados correspondentes são **cancelados** |
+| O tutor agenda ou edita uma consulta | Confirmação na hora e lembretes 24 horas e 1 hora antes |
+| Uma vacina tem próxima dose prevista | Lembretes na véspera e no dia, às 9h |
+| O app é aberto | Resumo com as vacinas atrasadas e os compromissos da semana (uma vez por dia) |
+| Consulta cancelada ou concluída, pet removido ou logout | Os lembretes correspondentes são cancelados |
 
-- **Funcionam com o app em primeiro plano, em segundo plano ou fechado** (as agendadas são do sistema operacional).
-- **Tocar na notificação** leva o usuário à tela relevante: detalhe do pet (vacina/consulta) ou aba Lembretes (resumo) — inclusive com o app fechado.
-- Permissão solicitada ao entrar no app (Android 13+); liga/desliga em **Perfil > Notificações de lembrete**.
-- Canal Android dedicado: "Lembretes de saúde do pet".
+- Funcionam com o app aberto, em segundo plano ou fechado.
+- Tocar na notificação abre o pet correspondente ou, no caso do resumo, a aba Lembretes.
+- A permissão é pedida ao entrar no app, e os lembretes podem ser desligados em Perfil.
 
-## Tela "Sobre o App" e hash do commit
+> No Expo Go aparece um aviso do expo-notifications no console, porque ele não suporta notificações push. As notificações locais usadas aqui funcionam normalmente, e no APK o aviso não aparece.
 
-Em **Perfil > Sobre o app** são exibidos versão, **hash do commit de referência** (curto e completo), branch, data do build, ambiente e URL da API. O hash é injetado no build por `app.config.js` (`EAS_BUILD_GIT_COMMIT_HASH` no EAS, ou `git rev-parse HEAD` em build local). Se houver alterações não commitadas, o hash recebe o sufixo `-dirty` — **sempre faça o commit antes de gerar o APK** para que o app publicado corresponda exatamente ao código do repositório.
+## ℹ️ Sobre o App
 
-Para conferir o que será embutido: `npm run info:build`.
+Em Perfil > Sobre o app aparecem a versão, o hash do commit (curto e completo), a branch, a data do build e a URL da API. O hash é gravado no momento do build pelo `app.config.js`. Se o build for feito com alterações não commitadas, o hash recebe o sufixo `-dirty`.
 
-## Publicação no Firebase App Distribution
+Para ver o que será gravado no build: `npm run info:build`.
 
-O app é distribuído como **APK** pelo Firebase App Distribution, com o e-mail institucional do professor cadastrado como *tester*.
+## 🌐 API
 
-### 1. API acessível pela internet
-O APK instalado no celular do professor **não alcança `localhost`/`10.0.2.2`**. Publique a API Java na nuvem (Azure, conforme a disciplina de DevOps) e informe a URL em `eas.json` (`EXPO_PUBLIC_API_URL`, terminando em `/api`). O app já permite tráfego HTTP (`usesCleartextTraffic`), caso a API não use HTTPS.
+O app usa a API publicada em `https://vetflow-java.onrender.com`. A autenticação é por sessão: o login cria a sessão no servidor e as requisições seguintes usam o mesmo cookie.
 
-### 2. Gerar o APK (a partir de um commit já feito e enviado ao GitHub)
-**Opção A — EAS Build (nuvem):**
-```bash
-npm install
-npm install -g eas-cli
-eas login
-eas build --platform android --profile preview   # gera o APK; baixe o .apk ao final
-```
-**Opção B — build local (Android Studio + JDK 17):**
-```bash
-npm install
-EXPO_PUBLIC_API_URL="https://SUA-API/api" npx expo prebuild --platform android
-cd android && ./gradlew assembleRelease          # APK em android/app/build/outputs/apk/release/
-```
+O servidor está em um plano gratuito e fica inativo quando passa um tempo sem uso, então a primeira requisição pode levar até um minuto.
 
-### 3. Publicar no Firebase
-1. No [console do Firebase](https://console.firebase.google.com) crie/abra um projeto → **Adicionar app Android** com o pacote `com.fiap.vetflow`.
-2. **Release & Monitor > App Distribution > Começar** → envie o `.apk`.
-3. Em **Testadores e grupos**, adicione o **e-mail institucional do professor** e distribua.
-4. Confirme que o convite chegou e que o app instala e abre.
+### Endpoints usados
 
-Pela CLI (opcional): `firebase appdistribution:distribute app-release.apk --app <ID_DO_APP_ANDROID> --testers "professor@fiap.com.br" --release-notes "Sprint 4 — commit <hash>"`.
+| Ação | Método | Endpoint |
+|---|---|---|
+| Login, cadastro, sessão e logout | POST / POST / GET / POST | `/api/auth/login`, `/register`, `/me`, `/logout` |
+| Pets do tutor / todos (veterinário) | GET | `/api/pets/by-tutor/{tutorId}`, `/api/pets` |
+| Detalhe, cadastro, edição e remoção de pet | GET / POST / PUT / DELETE | `/api/pets/{id}` |
+| Vacinas do pet | GET | `/api/vaccines/by-pet/{petId}` |
+| Vacinas vencidas e a vencer | GET | `/api/vaccines/expired`, `/api/vaccines/due-soon?days=30` |
+| Cadastro, edição e remoção de vacina | POST / PUT / DELETE | `/api/vaccines/{id}` |
+| Consultas do pet e pendentes | GET | `/api/appointments/by-pet/{petId}`, `/api/appointments/pending` |
+| Agendar, editar e cancelar consulta | POST / PUT / DELETE | `/api/appointments/{id}` |
+| Concluir consulta | PUT | `/api/appointments/{id}/complete` |
+| Clínicas | GET | `/api/clinics` |
 
-## Como executar (desenvolvimento)
+Os ids são UUID. Quando a API retorna um erro, o app mostra a mensagem enviada por ela (por exemplo, "E-mail já cadastrado").
 
-1. Suba a API Java (repositório `vetflow-java`). Ela usa o **Oracle da FIAP** e precisa das variáveis `ORACLE_USER` e `ORACLE_PASSWORD` (no IntelliJ: *Edit Configurations → Environment variables* `ORACLE_USER=rmXXXXX;ORACLE_PASSWORD=...`), com o banco já preparado pelos scripts do grupo (`01_ddl`, pacotes `02_*` e `06_seed`). Confira em `http://localhost:8080/actuator/health`.
-2. A URL de desenvolvimento é escolhida automaticamente: emulador Android → `http://10.0.2.2:8080/api`; iOS/web → `http://localhost:8080/api`. Para celular físico ou outra URL, defina `EXPO_PUBLIC_API_URL` (ex.: arquivo `.env` com `EXPO_PUBLIC_API_URL=http://IP-DO-PC:8080/api`).
-3. Instale e rode:
+## ▶️ Como executar
+
+Pré-requisitos: Node.js 18 ou superior e o Expo Go no celular (ou um emulador Android).
+
 ```bash
 npm install
 npx expo start
 ```
-> **Expo Go (Android, SDK 53+):** notificações *remotas/push* não são suportadas no Expo Go, mas as **notificações locais** usadas aqui funcionam. Um aviso do `expo-notifications` no console do Expo Go é esperado. No APK publicado não há essa limitação.
 
-## Contas de teste
+Depois é só ler o QR Code com o Expo Go ou apertar `a` para abrir no emulador.
 
-Contas do seed do banco (senha `senha123`):
+Por padrão o app usa a API publicada. Para usar a API rodando no seu computador, crie um arquivo `.env` a partir do `.env.example`:
+
+```
+EXPO_PUBLIC_API_URL=http://IP-DO-SEU-COMPUTADOR:8080/api
+```
+
+### Contas de teste
+
+Senha de todas: `senha123`
 
 | Perfil | Nome | E-mail |
 |---|---|---|
@@ -166,38 +156,30 @@ Contas do seed do banco (senha `senha123`):
 | Tutor | Ana Paula Silva | `ana.silva@email.com` |
 | Veterinário | Dra. Fernanda Alves | `vet@vetflow.com` |
 
-Ou crie uma conta na tela **Criar Conta**.
+Também é possível criar uma conta de tutor pela tela de cadastro.
 
-## Endpoints da API consumidos
+## 📱 Telas
 
-| Ação | Método | Endpoint |
-|---|---|---|
-| Login / Cadastro / Sessão / Logout | POST/POST/GET/POST | `/api/auth/login`, `/register`, `/me`, `/logout` |
-| Pets do tutor / todos (VET) | GET | `/api/pets/by-tutor/{tutorId}`, `/api/pets?page&size` |
-| Detalhe / Criar / Editar / Remover pet | GET/POST/PUT/DELETE | `/api/pets[/{id}]` |
-| Vacinas do pet | GET | `/api/vaccines/by-pet/{petId}` |
-| Vacinas vencidas / a vencer | GET | `/api/vaccines/expired`, `/api/vaccines/due-soon?days=30` |
-| Criar / Editar / Remover vacina (VET) | POST/PUT/DELETE | `/api/vaccines[/{id}]` |
-| Consultas do pet / pendentes | GET | `/api/appointments/by-pet/{petId}`, `/api/appointments/pending` |
-| Agendar / Editar / Cancelar consulta | POST/PUT/DELETE | `/api/appointments[/{id}]` |
-| Concluir consulta (VET) | PUT | `/api/appointments/{id}/complete` |
-| Clínicas | GET | `/api/clinics` |
+1. Login
+2. Cadastro
+3. Início
+4. Meus Pets
+5. Detalhe do Pet (vacinas e consultas)
+6. Cadastro/edição de pet
+7. Cadastro/edição de vacina
+8. Agendamento/edição de consulta
+9. Lembretes
+10. Perfil (tema, notificações e logout)
+11. Sobre o App
 
-> Todos os ids são **UUID**. Os endpoints `expired`, `due-soon` e `pending` já devolvem só o que o usuário logado pode ver (filtro no servidor). Erros chegam no formato `ApiError` (`mensagem`, `campos`) e o app mostra a mensagem original — incluindo as das procedures Oracle (ex.: "E-mail já cadastrado").
+## 📦 Publicação
 
-## Telas do aplicativo
+O APK é gerado com o EAS Build e distribuído pelo Firebase App Distribution.
 
-1. **Login** · 2. **Cadastro** · 3. **Início** (painel) · 4. **Meus Pets** · 5. **Detalhe do Pet** (vacinas + consultas) · 6. **Form de Pet** · 7. **Form de Vacina** · 8. **Form de Consulta** · 9. **Lembretes** · 10. **Perfil** (tema, notificações, logout) · 11. **Sobre o App**
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform android --profile preview
+```
 
-## Checklist de requisitos (Sprint 4)
-
-| Requisito | Onde |
-|---|---|
-| Todas as telas funcionais; fluxo completo; funcionalidades das Sprints 1–3 concluídas | 11 telas, CRUD de pets/vacinas/consultas integrados à API |
-| Publicação no Firebase App Distribution + professor como tester | [Publicação](#publicação-no-firebase-app-distribution) |
-| Versão publicada = código do repositório | Hash do commit embutido no build (`app.config.js`) |
-| Tela "Sobre o App" com hash do commit | `src/screens/SobreApp.js` |
-| Notificações reais (cenário, disparo/recepção, integração ao fluxo, demonstração) | [Notificações](#notificações) |
-| Arquitetura: UI × lógica × dados; hooks isolados; sem HTTP/regra nas telas | [Arquitetura](#arquitetura-do-projeto) |
-| Tema claro/escuro | [Tema](#tema-claroescuro) |
-| Vídeo de apresentação | Link no topo deste README |
+A URL da API usada no APK fica no `eas.json` (`EXPO_PUBLIC_API_URL`). Ao fim do build, o arquivo `.apk` é baixado e enviado ao Firebase App Distribution, com o hash do commit nas notas da versão. Esse é o mesmo hash que aparece na tela Sobre o App.
