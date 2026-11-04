@@ -5,9 +5,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, SPACING } from '../constants/theme';
+import { FONTS, SPACING } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 export default function Header({ title, onBack, rightIcon, onRightPress }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
@@ -36,9 +40,9 @@ export default function Header({ title, onBack, rightIcon, onRightPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   safeArea: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.header,
   },
   container: {
     height: 56,

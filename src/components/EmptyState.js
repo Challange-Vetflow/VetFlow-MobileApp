@@ -4,9 +4,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import useThemedStyles from '../hooks/useThemedStyles';
 
 export default function EmptyState({ icon = 'inbox', title, actionLabel, onAction }) {
+  const { colors: COLORS } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
       <View style={styles.iconWrapper}>
@@ -22,7 +26,7 @@ export default function EmptyState({ icon = 'inbox', title, actionLabel, onActio
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (COLORS) => StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingTop: 60,
@@ -49,7 +53,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
   },
   buttonText: {
-    color: COLORS.white,
+    color: COLORS.onPrimary,
     fontWeight: '700',
     fontSize: FONTS.sizes.md,
   },
